@@ -3,6 +3,7 @@
 #include <iostream>
 
 bool testSatellite1();
+void testSimulation4();
 void testSimulation3();
 void testMobile2();
 void testSimulation1();

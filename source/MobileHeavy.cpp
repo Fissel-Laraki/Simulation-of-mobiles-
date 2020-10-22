@@ -34,7 +34,7 @@ void MobileHeavy::avance(double dt){
 }
 
 Vector3D MobileHeavy::gravity(const Vector3D& p) {
-  double d = ( p - this->position).norm();
+  double d = norm( p - this->position);
   return  (p - (this->position))*(-(this->mass()*6.6708e-11)/(d*d*d));
 }
 

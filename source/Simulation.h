@@ -19,6 +19,7 @@ class Simulation{
   public:
     Simulation();
     Simulation(const Simulation& s);
+    ~Simulation();
     void addBody(Mobile*);
     void removeBody(Mobile*);
     void step(double);

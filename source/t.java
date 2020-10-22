@@ -1,7 +1,0 @@
-imort ;
-
-public class Main{
-
-    ;;
-
-}

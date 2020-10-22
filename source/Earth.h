@@ -13,6 +13,7 @@ class Earth : public MobileHeavy {
 
   public:
     Earth(Earth& other) = delete;
+    ~Earth();
     void operator=(const Earth&) = delete;
     static Earth* GetInstance();
 

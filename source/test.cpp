@@ -16,62 +16,102 @@ using namespace std;
 
 bool testSatellite1() {
     
-    Mobile* satellite = new MobileHeavy("satellite",Vector3D(6578000,0,0),Vector3D(0.0,7784.3,0.0),0.0,0.0);
+    Mobile* satellite = new MobileHeavy("satellite",Vector3D(6571000.0,0,0),Vector3D(0.0,7784.3,0.0),1.0,1.0);
     Earth* earth = Earth::GetInstance();
     Simulation* s = new Simulation();
     s->addBody(satellite);
     s->addBody(earth);
     
-    double T = 2.0*M_PI*sqrt(pow(6578000.0,3.0)/(earth->gravity(Vector3D(1.0,0,0)).norm()));
+    double T = 2.0*M_PI*sqrt(pow(6578000.0,3.0)/norm(earth->gravity(Vector3D(1.0,0,0))));
     Vector3D depart = satellite->getPosition();
     s->simulate(T);
-    double distance =  depart.distance(satellite->getPosition());
-    cout << "distance : " << distance << endl;
+    
+    double d =  distance(depart,satellite->getPosition());
+    
+    
     double max = 70000.0; // 70 km la distance maximale
-    Vector3D tmp =satellite->getVitesse(); 
-    cout <<tmp<< endl;
-    if (distance >= max ) 
+
+    s->removeBody(earth);
+
+    delete s;
+    delete earth;
+    
+    if (d >= max ) 
       return false;
     return true;
+
 }
 
 bool testEarth() {
     Earth* e1 = Earth::GetInstance();
     Vector3D position = e1->getPosition();
+    bool var = true;
 
     // On s'assure qu'on se situe bien à la position (0,0,0)
     for (int i = 0 ; i < 3 ; i++ ) {
         if (position[i] != 0)
-          return false;
+          var =  false;
     }
 
-
-    if ( e1->getDensity() != 5513584  || e1->getRadius() != 6378000 )
-      return false;
-
-
-    double GM = e1->gravity(Vector3D(1.0,0,0)).norm();
+    double GM = norm(e1->gravity(Vector3D(1.0,0,0)));
     double g =  GM/pow(e1->getRadius(),2); // On est censé obtenir quelque chose proche de 9.81
 
     if ( g < 9.0 || g > 10.0)
-      return false;
+      var =  false;
+
+    delete e1;
+    return var;
+}
+
+void testSimulation4() {
+    
+    Simulation* s1 = new Simulation();
+
+    Mobile* satellite1 = new MobileHeavy("satellite1",Vector3D(6578000.0,0,0),Vector3D(0.0,7784.3,0.0),0.0,0.0);
+    Mobile* satellite2 = new MobileHeavy("satellite2",Vector3D(6578000.0,0,0),Vector3D(0.0,7784.3,0.0),0.0,0.0);
+
+    Earth* earth = Earth::GetInstance();
+
+    s1->addBody(satellite1);
+    s1->addBody(satellite2);
+    s1->addBody(earth);
 
 
-    return true;
+    Simulation* s2 =  new Simulation(*s1);
+
+    s1->simulate(1000);
+    s2->simulate(1000);
+
+    // Si les deux simulations contiennent les mêmes mobiles, alors ils devraient subir exactement la meme simulation et donc le meme temps.
+    assert(s1->getTime() == s2->getTime());
+    
+    s1->removeBody(earth);
+    s2->removeBody(earth);
+
+    delete s1;
+    delete s2;
+    delete earth;
 }
 void testSimulation3(){
 
-    Vector3D position(0,0,100);
-    Vector3D vitesse(0,0,-5);
+    
+    Earth* earth = Earth::GetInstance();
+    
 
-    MobileHeavy* mH = new MobileHeavy("mobileHeavy",position,vitesse,1,1);
+    Vector3D position(0,0,100 + earth->getRadius());
+    Vector3D vitesse(0,0,0);
+
+    MobileHeavy* mH = new MobileHeavy("mobileHeavy",position,vitesse,0,0);
     Mobile* m = new Mobile("mobile",position,vitesse);
 
     Simulation s;
+
+    s.addBody(earth);
     s.addBody(mH);
     s.addBody(m);
 
-    while ( mH->getPosition()[2] >= 0 && m->getPosition()[2] >= 0) {
+    Vector3D tmp ;
+    while ( mH->getPosition()[2] >= earth->getRadius() && m->getPosition()[2] >= earth->getRadius()) {
         s.step(0.1);
     }
 
@@ -80,32 +120,34 @@ void testSimulation3(){
     // On s'attend donc a avoir un temps de simulation proche de 4.5s
 
     double delta = 0.1 ;
-    assert(s.getTime() <= 4.5 + delta && s.getTime() >= 4.5 - delta && m->getPosition()[2] > 0 );
+    Vector3D vite = mH->getVitesse();
+    assert(s.getTime() <= 4.5 + delta && s.getTime() >= 4.5 - delta /*&& m->getPosition()[2] > 0*/ );
 
-    cout << "Position de l'objet non pesant : "  << m->getPosition()[2] << endl;
-    cout << "Position de l'objet pesant : "<<mH->getPosition()[2] << endl;
-    cout << "Temps pour que le premier objet - pesant - atteigne le sol : " << s.getTime() << endl;
+    s.removeBody(earth);
+
 }
 
 void testMobile2(){
 
+    Earth* earth = Earth::GetInstance();
+
     // On créé nos vecteurs position et vitesse qu'on pourra attribuer au mobile m
-    Vector3D position(0,0,100);
+    Vector3D position(0,0,100+earth->getRadius());
     Vector3D vitesse(0,0,0);
     MobileHeavy* m = new MobileHeavy("mobileHeavy",position,vitesse,1,1);
     // On utilise la classe Simulation, pour obtenir un temps a la fin
     Simulation s;
     s.addBody(m);
+    s.addBody(earth);
 
-    Vector3D tmp;
     // On verifie que position[2] -- donc la coordonnée z -- n'est pas négatif
-    while(m->getPosition()[2] >=0){
+    while(m->getPosition()[2] >=earth->getRadius()){
         s.step(0.1);
-        tmp = m->getPosition(); //??
     }
     // Delta est notre marge d'erreur
     double delta = 0.1 ;
     assert(s.getTime() <= 4.5 + delta && s.getTime() >= 4.5 - delta);
+    s.removeBody(earth);
 }
 void testSimulation1(){
 
@@ -144,6 +186,8 @@ void testSimulation1(){
     s.step(1);
     assert(s.getTime() == 1);
 
+    delete m;
+    delete n;
 }
 
 void testMobile1() {
@@ -216,4 +260,10 @@ void testVector3D() {
     c.modify(5,3,1);
     b += 1;
     assert( c == b);
+
+    c.modify(1.0,2.0,3.0);
+    assert(distance(c,a) == 0);
+
+    c.modify(6, 0, 0 );
+    assert(norm(c) == 6.0);
 }

@@ -12,6 +12,13 @@ using namespace std;
 Simulation::Simulation():time(0.0),time_step(0.1) {
 }
 
+Simulation::~Simulation(){
+    std::list<Mobile*>::iterator it;
+    for  (it = bodies.begin() ; it != bodies.end() ; it++)
+      delete *it;
+}
+
+
 Simulation::Simulation(const Simulation& s){
     time = s.time;
     time_step = s.time_step; 
@@ -35,14 +42,16 @@ void Simulation::step(double dt){
         (*it)->computeAcceleration(bodies);
         (*it)->avance(dt); 
     }
+    time += dt;
 }
 
 
 void Simulation::simulate(double stop) {
-
-  while (this->time < stop) {
+    
+  double time= 0.0;
+  while (time < stop) {
     this->step(this->time_step);
-    this->time += this->time_step;
+    time += this->time_step;
   }
 }
 

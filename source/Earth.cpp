@@ -5,7 +5,10 @@
 
 Earth* Earth::instance = nullptr;
 
-Earth::Earth():MobileHeavy("Earth", Vector3D(0.0,0.0,0.0) , Vector3D(0.0,0.0,0.0),6378000.0,5513584.0){
+Earth::Earth():MobileHeavy("Earth", Vector3D(0.0,0.0,0.0) , Vector3D(0.0,0.0,0.0),6371000.0,5514000.0){
+}
+Earth::~Earth() {
+  instance = nullptr;
 }
 
 Earth* Earth::GetInstance() {
